@@ -1,41 +1,46 @@
-const Meta = imports.gi.Meta;
+const Meta = imports.gi.Meta
+const Mainloop = imports.mainloop
 
-var _handles = [];
-var _previousWorkspace = {};
+let handle
 
 function maximize(act) {
-    const win = act.meta_window;
+    const win = act.meta_window
+
     if (win.window_type !== Meta.WindowType.NORMAL)
-    	return;
-    // If the current workspace doesn't have any other windows make it maximized here.
+        return
+    
     if (global.workspace_manager.get_active_workspace().list_windows().length == 1)
-	return;
-    _previousWorkspace[win.toString()] = global.workspace_manager.get_active_workspace_index();
-    let lastworkspace = global.workspace_manager.n_workspaces;
-    if (lastworkspace<1)
-	lastworkspace=1;
-    win.change_workspace_by_index(lastworkspace,1);
-    global.workspace_manager.get_workspace_by_index(lastworkspace).activate(global.get_current_time());
+        return
+        
+    if (global.display.get_primary_monitor() != win.get_monitor())
+        return
+    
+    let lastworkspace = global.workspace_manager.n_workspaces
+    lastworkspace = lastworkspace < 1 ? 1 : lastworkspace 
+
+        win.change_workspace_by_index(lastworkspace, 1)
+        global.workspace_manager.get_workspace_by_index(lastworkspace).activate(global.get_current_time())
 }
 
-function unmaximize(act){
-    const win = act.meta_window;
+function unmaximize(act) {
+    const win = act.meta_window
+
     if (win.window_type !== Meta.WindowType.NORMAL)
-    	return;
-    let previous = _previousWorkspace[win.toString()];
-    if (previous == null || previous == undefined)
-	return;
-    win.change_workspace_by_index(previous, 1);
-    global.workspace_manager.get_workspace_by_index(previous).activate(global.get_current_time());
+        return
+
+    win.change_workspace_by_index(0, 1);
+    global.workspace_manager.get_workspace_by_index(0).activate(global.get_current_time())
 }
 
 function enable() {
-    _handles.push(global.window_manager.connect('size-change', (_, act, change) => {
-	if (change === Meta.SizeChange.FULLSCREEN) maximize(act);
-	if (change === Meta.SizeChange.UNFULLSCREEN) unmaximize(act);
-    }));
+    handle = global.window_manager.connect('size-change', (_, act, change) => {
+        switch (change) {
+            case Meta.SizeChange.FULLSCREEN: return maximize(act)
+            case Meta.SizeChange.UNFULLSCREEN: return unmaximize(act)
+        }
+    })
 }
 
 function disable() {
-    _handles.splice(0).forEach(h => global.window_manager.disconnect(h));
+    global.window_manager.disconnect(handle)
 }
