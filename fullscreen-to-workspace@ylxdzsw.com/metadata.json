@@ -1,0 +1,7 @@
+{
+    "uuid": "fullscreen-to-workspace@ylxdzsw.com",
+    "name": "Fullscreen To Workspace",
+    "description": "Fullscreen to new workspace.",
+    "shell-version": [ "3.32" ],
+    "url": "https://github.com/ylxdzsw/gnome-shell-extension-fullscreen-to-workspace"
+}
